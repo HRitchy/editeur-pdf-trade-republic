@@ -17,15 +17,6 @@ if uploaded_file:
     pdf_bytes = uploaded_file.read()
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
 
-    # Aperçu du texte
-    st.subheader("Aperçu du texte (par page)")
-    tab_pages = st.tabs([f"Page {i+1}" for i in range(doc.page_count)])
-    for i, page in enumerate(doc):
-        with tab_pages[i]:
-            text = page.get_text()
-            st.text_area(f"Texte extrait (Page {i+1})", text, height=200, disabled=True)
-
-
     st.divider()
 
     # Suppression des images

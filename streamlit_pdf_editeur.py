@@ -6,10 +6,9 @@ st.set_page_config(page_title="Éditeur PDF simple", layout="centered")
 st.title("📝 Éditeur PDF : modification du texte & suppression d'images")
 st.write("""
 1. Importez un fichier PDF avec texte sélectionnable.
-2. Remplacez un texte spécifique par un nouveau texte.
-3. Supprimez toutes les images (optionnel).
-4. **Nouvelle option : ne conserver que le contenu entre les mots « TRANSACTIONS » et « APERÇU DU SOLDE ».**
-5. Téléchargez le PDF modifié.
+2. Supprimez toutes les images (optionnel).
+3. **Nouvelle option : ne conserver que le contenu entre les mots « TRANSACTIONS » et « APERÇU DU SOLDE ».**
+4. Téléchargez le PDF modifié.
 """)
 
 uploaded_file = st.file_uploader("Choisissez un fichier PDF à modifier", type=["pdf"])
@@ -26,18 +25,8 @@ if uploaded_file:
             text = page.get_text()
             st.text_area(f"Texte extrait (Page {i+1})", text, height=200, disabled=True)
 
+
     st.divider()
-    # Remplacement de texte
-    st.subheader("Remplacement de texte")
-    col1, col2 = st.columns(2)
-    with col1:
-        old_text = st.text_input("Texte à remplacer (sensible à la casse)")
-    with col2:
-        new_text = st.text_input("Nouveau texte", value="")
-    st.caption(
-        "⚠️ Ne remplace que les occurrences exactes du texte sur toutes les pages. Limitez le remplacement à des mots/phrases courts."
-    )
-    replace_btn = st.button("Appliquer le remplacement")
 
     # Suppression des images
     st.subheader("Suppression des images")
@@ -50,7 +39,7 @@ if uploaded_file:
     )
 
     # Traitement du PDF
-    if replace_btn or remove_img or keep_transactions:
+    if remove_img or keep_transactions:
         with st.spinner("Traitement du PDF en cours..."):
             # Ne conserver que la section Transactions
             if keep_transactions:
@@ -92,13 +81,6 @@ if uploaded_file:
                         doc.delete_page(j)
 
             for page in doc:
-                # Remplacement de texte
-                if replace_btn and old_text.strip():
-                    rects = page.search_for(old_text)
-                    for rect in rects:
-                        page.add_redact_annot(rect, new_text, fill=(1, 1, 1))
-                    if rects:
-                        page.apply_redactions()
                 # Suppression des images
                 if remove_img:
                     img_list = page.get_images(full=True)
@@ -116,4 +98,4 @@ if uploaded_file:
                 mime="application/pdf"
             )
     else:
-        st.info("Aucune modification appliquée. Cochez une option ou lancez le remplacement pour générer le PDF.")
+        st.info("Aucune modification appliquée. Cochez une option pour générer le PDF.")

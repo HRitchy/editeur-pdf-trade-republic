@@ -3,12 +3,11 @@ import fitz  # PyMuPDF
 import io
 
 st.set_page_config(page_title="Éditeur PDF simple", layout="centered")
-st.title("📝 Éditeur PDF : modification du texte & suppression d'images")
+st.title("Éditeur PDF : Relevé de compte Trade Republic")
 st.write("""
-1. Importez un fichier PDF avec texte sélectionnable.
-2. Supprimez toutes les images (optionnel).
-3. **Nouvelle option : ne conserver que le contenu entre les mots « TRANSACTIONS » et « APERÇU DU SOLDE ».**
-4. Téléchargez le PDF modifié.
+1. Importez un Relevé de compte Trade Republic.
+2. Ne conserver que les TRANSACTIONS.
+3. **Téléchargez le PDF modifié.**
 """)
 
 uploaded_file = st.file_uploader("Choisissez un fichier PDF à modifier", type=["pdf"])

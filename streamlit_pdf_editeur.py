@@ -20,7 +20,8 @@ st.write("""
 1. Importez un fichier PDF avec texte sélectionnable.
 2. Remplacez un texte spécifique par un nouveau texte.
 3. Supprimez toutes les images (optionnel).
-4. Téléchargez le PDF modifié.
+4. **Nouvelle option : ne conserver que le contenu entre les mots « TRANSACTIONS » et « APERÇU DU SOLDE ».**
+5. Téléchargez le PDF modifié.
 """)
 
 # --- Étape 1 : Import du PDF ---
@@ -56,18 +57,55 @@ if uploaded_file:
     st.subheader("Suppression des images")
     remove_img = st.checkbox("Supprimer toutes les images du PDF", value=False)
 
+    # --- Nouvelle option : ne garder que la section Transactions ---
+    keep_transactions = st.checkbox(
+        "Conserver uniquement le contenu entre 'TRANSACTIONS' et 'APERÇU DU SOLDE'",
+        value=False,
+    )
+
     # --- Traitement du PDF en mémoire ---
-    if replace_btn or remove_img:
+    if replace_btn or remove_img or keep_transactions:
         with st.spinner("Traitement du PDF en cours..."):
+            if keep_transactions:
+                start_idx = end_idx = None
+                start_rect = end_rect = None
+                for i, p in enumerate(doc):
+                    if start_idx is None:
+                        s = p.search_for("TRANSACTIONS")
+                        if s:
+                            start_idx = i
+                            start_rect = s[0]
+                    if start_idx is not None and end_idx is None:
+                        e = p.search_for("APERÇU DU SOLDE")
+                        if e:
+                            end_idx = i
+                            end_rect = e[0]
+                            break
+                if start_idx is None or end_idx is None:
+                    st.error("Mots clés introuvables dans le document.")
+                    st.stop()
+                # Redaction des zones hors section
+                page = doc[start_idx]
+                page.add_redact_annot(fitz.Rect(0, 0, page.rect.width, start_rect.y0), fill=(1, 1, 1))
+                if start_idx == end_idx:
+                    page.add_redact_annot(fitz.Rect(0, end_rect.y1, page.rect.width, page.rect.height), fill=(1, 1, 1))
+                    page.apply_redactions(images=fitz.PDF_REDACT_IMAGE_ALL)
+                else:
+                    page.apply_redactions(images=fitz.PDF_REDACT_IMAGE_ALL)
+                    page = doc[end_idx]
+                    page.add_redact_annot(fitz.Rect(0, end_rect.y1, page.rect.width, page.rect.height), fill=(1, 1, 1))
+                    page.apply_redactions(images=fitz.PDF_REDACT_IMAGE_ALL)
+                for j in range(doc.page_count - 1, -1, -1):
+                    if j < start_idx or j > end_idx:
+                        doc.delete_page(j)
+
             for page in doc:
-                # Remplacement de texte par redaction
                 if replace_btn and old_text.strip():
                     rects = page.search_for(old_text)
                     for rect in rects:
                         page.add_redact_annot(rect, new_text, fill=(1,1,1))
                     if rects:
                         page.apply_redactions(images=fitz.PDF_REDACT_IMAGE_NONE)
-                # Suppression d'images
                 if remove_img:
                     img_list = page.get_images(full=True)
                     for img in img_list:

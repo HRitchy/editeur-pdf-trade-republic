@@ -72,18 +72,19 @@ if uploaded_file:
                 if start_idx is None or end_idx is None:
                     st.error("Mots clés introuvables dans le document.")
                     st.stop()
-                # Redaction hors section
+                # Redaction des zones hors section
                 page = doc[start_idx]
                 # Supprimer tout avant "TRANSACTIONS"
                 page.add_redact_annot(fitz.Rect(0, 0, page.rect.width, start_rect.y0), fill=(1, 1, 1))
-                # Supprimer tout après "APERÇU DU SOLDE"
                 if start_idx == end_idx:
-                    page.add_redact_annot(fitz.Rect(0, end_rect.y1, page.rect.width, page.rect.height), fill=(1, 1, 1))
+                    # Supprimer la zone contenant "APERÇU DU SOLDE" ET tout ce qui suit
+                    page.add_redact_annot(fitz.Rect(0, end_rect.y0, page.rect.width, page.rect.height), fill=(1, 1, 1))
                     page.apply_redactions()
                 else:
                     page.apply_redactions()
                     page2 = doc[end_idx]
-                    page2.add_redact_annot(fitz.Rect(0, end_rect.y1, page2.rect.width, page2.rect.height), fill=(1, 1, 1))
+                    # Supprimer la zone contenant "APERÇU DU SOLDE" ET tout ce qui suit
+                    page2.add_redact_annot(fitz.Rect(0, end_rect.y0, page2.rect.width, page2.rect.height), fill=(1, 1, 1))
                     page2.apply_redactions()
                 # Suppression des pages hors section
                 for j in range(doc.page_count - 1, -1, -1):
@@ -116,4 +117,3 @@ if uploaded_file:
             )
     else:
         st.info("Aucune modification appliquée. Cochez une option ou lancez le remplacement pour générer le PDF.")
-
